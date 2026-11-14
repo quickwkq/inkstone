@@ -9,3 +9,5 @@ build/icon.icns
 build/icon.png
 build/icon.iconset/
 build/dmg-background.png
+src-tauri/target/
+src-tauri/gen/
