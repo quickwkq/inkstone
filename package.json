@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "node scripts/assets.mjs && vite build",
+    "prestart": "node scripts/assets.mjs && npm run icons",
     "start": "tauri dev",
     "pack": "tauri build --bundles app",
     "test": "node --test tests/model.test.mjs",
@@ -14,6 +15,7 @@
     "dist:mac": "tauri build && node scripts/collect.mjs",
     "dist:all": "tauri build --target aarch64-apple-darwin && tauri build --target x86_64-apple-darwin && node scripts/collect.mjs",
     "checksums": "node scripts/checksums.mjs",
+    "pretest:native": "npm run icons",
     "test:native": "cargo test --manifest-path src-tauri/Cargo.toml"
   },
   "dependencies": {
