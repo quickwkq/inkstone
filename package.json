@@ -1,0 +1,40 @@
+{
+  "name": "inkstone",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "墨页 · Local-first Markdown editor",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "node scripts/assets.mjs && vite build",
+    "start": "npm run build && electron .",
+    "pack": "npm run build && electron-builder --mac dir",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "build": {
+    "appId": "com.quickwkq.inkstone",
+    "productName": "Inkstone",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "identity": null
+    },
+    "directories": {
+      "output": "release"
+    }
+  },
+  "dependencies": {
+    "dompurify": "^3.4.17",
+    "vditor": "^4.0.1"
+  },
+  "devDependencies": {
+    "electron": "^45.3.1",
+    "electron-builder": "^26.18.0",
+    "vite": "^8.3.8"
+  }
+}
