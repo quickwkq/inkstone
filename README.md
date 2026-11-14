@@ -1,36 +1,32 @@
 # 墨页 Inkstone
 
-以本地文档为中心的 macOS Markdown 阅读编辑器。源码仓库私有；[安装包与使用指南](https://github.com/quickwkq/inkstone-releases)公开。
+本地优先的 macOS Markdown 阅读编辑器。源码私有，[安装包与使用指南](https://github.com/quickwkq/inkstone-releases)公开。
 
 ## 开发
 
-需要 Node.js 22.12+。使用 Electron + Vite + Vditor + DOMPurify，独立实现界面与文件管理，没有复用 Typora 源码或素材。
+0.3.0 使用 Tauri 2 + macOS WKWebView，复用 Vite、Vditor、DOMPurify 界面；不再捆绑 Electron/Chromium/Node.js。需要 macOS 13+、Xcode Command Line Tools、Node.js 22.12+、rustup（项目固定 Rust 1.90）。
 
 ```sh
 npm ci
-npm start
 npm test
+npm run test:native
+npm start
 npm run dist:all
 npm run checksums
 ```
 
-浏览器开发先执行 `node scripts/assets.mjs`，再执行 `npm run dev`，访问 http://127.0.0.1:5178 。浏览器保存会下载文件；桌面版使用系统打开和保存对话框。
+## 功能
 
-## 0.2.0
+即时编辑、源码和阅读模式；大纲、搜索、明暗主题和专注模式；本地草稿恢复；系统打开/保存/另存为对话框；最近文件；Finder 文件关联；HTML 导出和系统打印/PDF。原子保存、符号链接保留和外部修改检测防止意外覆盖。
 
-- Apple Silicon / Intel DMG + ZIP，应用图标、拖入 Applications 安装界面及校验和
-- Finder / Dock 文件打开、macOS 原生菜单、最近文件、关闭窗口后的 Dock 恢复
-- 保存、另存为、关闭文档、当前文档查找
-- 文件路径关联跨重启恢复，原子写入与外部修改检测
-- 即时编辑 / 源码 / 阅读、大纲、搜索、主题、专注模式、草稿恢复、HTML 与打印导出
-- GitHub Actions 双架构构建和可选签名公证配置
+文档限制 10 MB。草稿使用本机 WebView localStorage，写入磁盘文件需 ⌘S。富文本会规范化 Markdown，远程图片可能访问网络。
 
-默认构建未签名、未公证；当前没有自动更新。详见 [分发指南](docs/DISTRIBUTION.md)。
+## 从 0.2 升级
 
-文档限制 10 MB，富文本编辑会规范化 Markdown。草稿使用本机 localStorage，保存到实际文件需 ⌘S。重要文档仍需自行备份。外部图片可能请求网络。
+**先在旧版中把需要的草稿保存为 .md 文件**，再安装新版重新打开。Electron 与 WebKit 的草稿数据库不同，新版不会自动读取旧草稿，也不会删除旧数据。旧版安装包仍可从 Release 下载。详见 [分发指南](docs/DISTRIBUTION.md)。
 
-## 参考调查
+默认发行版没有 Developer ID 签名或 Apple 公证，没有自动更新。Intel 包可交叉构建，但需要 Intel 真机独立验收。
 
-本机 Typora 1.8.10 的静态调查覆盖 199 个清单文件中的一个 JavaScript 文件，未做运行时验收。REA Evidence: `ev_53147ed4dbf475643837b31af1b6ea8d46e72d3042796e67808236af643e423e`。我们的 Electron 实现是独立设计选择，不代表 Typora 的架构。
+## 参考与许可证
 
-Vditor 文档：https://github.com/Vanessa219/vditor 。第三方依赖遵循各自许可证。
+独立实现界面与文件管理，没有复用 Typora 源码或素材。先前 Typora 1.8.10 静态调查仅覆盖一个 JavaScript 文件，不代表其完整架构。Vditor：https://github.com/Vanessa219/vditor 。第三方依赖遵循各自许可证。

@@ -1,28 +1,30 @@
 {
   "name": "inkstone",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "墨页 · Local-first Markdown editor",
-  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "node scripts/assets.mjs && vite build",
-    "start": "npm run build && electron .",
-    "pack": "npm run build && npm run icons && electron-builder --mac dir --publish never",
-    "test": "node --test tests/*.test.mjs",
+    "prestart": "node scripts/assets.mjs && npm run icons",
+    "start": "tauri dev",
+    "pack": "tauri build --bundles app",
+    "test": "node --test tests/model.test.mjs",
     "icons": "node scripts/icons.mjs",
-    "dist:mac": "npm run build && npm run icons && electron-builder --mac dmg zip --publish never",
-    "dist:all": "npm run build && npm run icons && electron-builder --mac dmg zip --arm64 --x64 --publish never",
-    "checksums": "node scripts/checksums.mjs"
+    "dist:mac": "tauri build && node scripts/collect.mjs",
+    "dist:all": "tauri build --target aarch64-apple-darwin && tauri build --target x86_64-apple-darwin && node scripts/collect.mjs",
+    "checksums": "node scripts/checksums.mjs",
+    "pretest:native": "npm run icons",
+    "test:native": "cargo test --manifest-path src-tauri/Cargo.toml"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.12.4",
     "dompurify": "^3.4.17",
     "vditor": "^4.0.1"
   },
   "devDependencies": {
-    "electron": "^45.3.1",
-    "electron-builder": "^26.18.0",
+    "@tauri-apps/cli": "^2.12.4",
     "sharp": "^0.35.5",
     "vite": "^8.3.8"
   },

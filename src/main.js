@@ -1,3 +1,4 @@
+import './native';
 import Vditor from 'vditor';
 import DOMPurify from 'dompurify';
 import 'vditor/dist/index.css';
@@ -22,7 +23,7 @@ function switchDoc(id){capture();persist();active=id;persist();refresh();mount()
 function mount(){const ticket=++generation;ready=false;editor?.destroy();editor=null;$('#editor').innerHTML='';$('#editor').hidden=mode==='read';$('#reader').hidden=mode!=='read';if(mode==='read'){renderReader();return;}editor=new Vditor('editor',{cdn:new URL('vendor/vditor',document.baseURI).href,lang:'zh_CN',mode,theme:dark?'dark':'classic',height:'100%',value:current().content,cache:{enable:false},toolbar:['headings','bold','italic','strike','|','list','ordered-list','check','quote','code','inline-code','link','table','|','undo','redo'],outline:{enable:false},preview:{markdown:{toc:false},hljs:{enable:false},math:{engine:'KaTeX'},theme:{current:dark?'dark':'light',path:new URL('vendor/vditor/dist/css/content-theme',document.baseURI).href}},input:value=>{if(ticket===generation)sync(value);},after:()=>{if(ticket===generation)ready=true;}});}
 async function html(){return DOMPurify.sanitize(await Vditor.md2html(current().content,{cdn:new URL('vendor/vditor',document.baseURI).href}),{FORBID_TAGS:['style','iframe'],FORBID_ATTR:['style']});}
 async function renderReader(){const ticket=generation;const body=await html();if(ticket===generation)$('#reader').innerHTML=body;}
-function download(name,content,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+async function download(name,content,type){if(window.inkstone&&type.startsWith('text/html'))return window.inkstone.exportHTML(name,content);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 async function save(saveAs=false){
   capture();persist();const doc=current(), savedContent=doc.content;
   try{
@@ -60,7 +61,7 @@ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{capture();per
 $('#theme').onclick=()=>{capture();dark=!dark;localStorage.setItem('inkstone.theme',dark?'dark':'light');document.documentElement.dataset.theme=dark?'dark':'light';mount();};
 $('#focus').onclick=()=>{document.body.classList.toggle('focus');$('#focus').textContent=document.body.classList.contains('focus')?'退出专注':'专注模式';};
 $('#sidebar-toggle').onclick=()=>document.body.classList.toggle('hide-sidebar');
-$('#export').onchange=async e=>{const format=e.target.value;e.target.value='';capture();try{const body=await html();if(format==='html')download(current().name.replace(/\.md$/i,'.html'),'<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Inkstone document</title><style>body{max-width:760px;margin:60px auto;padding:24px;font:17px/1.9 system-ui;color:#252b29}pre,blockquote{padding:16px;background:#f4f4f0}table{border-collapse:collapse}td,th{padding:8px;border:1px solid #ccc}img{max-width:100%}</style><body>'+body+'</body></html>','text/html;charset=utf-8');if(format==='pdf'){$('#reader').innerHTML=body;document.body.classList.add('printing');window.print();document.body.classList.remove('printing');}}catch(err){notify('导出失败：'+err.message);}};
+$('#export').onchange=async e=>{const format=e.target.value;e.target.value='';capture();try{const body=await html();if(format==='html')await download(current().name.replace(/\.md$/i,'.html'),'<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Inkstone document</title><style>body{max-width:760px;margin:60px auto;padding:24px;font:17px/1.9 system-ui;color:#252b29}pre,blockquote{padding:16px;background:#f4f4f0}table{border-collapse:collapse}td,th{padding:8px;border:1px solid #ccc}img{max-width:100%}</style><body>'+body+'</body></html>','text/html;charset=utf-8');if(format==='pdf'){$('#reader').innerHTML=body;document.body.classList.add('printing');if(window.inkstone)await window.inkstone.print();else window.print();document.body.classList.remove('printing');}}catch(err){notify('导出失败：'+err.message);}};
 document.addEventListener('keydown',e=>{if(!window.inkstone&&(e.metaKey||e.ctrlKey)&&['s','o','n','f'].includes(e.key.toLowerCase())){e.preventDefault();({s:()=>save(e.shiftKey),o:open,n:()=>add(),f:toggleFind})[e.key.toLowerCase()]();}if(e.key==='Escape'){document.body.classList.remove('focus');$('#focus').textContent='专注模式';}});
 window.addEventListener('beforeunload',e=>{capture();if(!persist()){e.preventDefault();e.returnValue='';}});
 document.documentElement.dataset.theme=dark?'dark':'light';refresh();mount();
@@ -71,8 +72,18 @@ $('#find-toggle').onclick=toggleFind;$('#find-close').onclick=toggleFind;$('#fin
 if(window.inkstone){
   window.inkstone.onOpen(file=>acceptFile(file).catch(e=>notify('打开失败：'+e.message)));
   window.inkstone.onCommand(action=>{
-    const commands={new:()=>add(),open,save:()=>save(),'save-as':()=>save(true),close:()=>closeDoc().catch(e=>notify(e.message)),find:toggleFind,focus:()=>$('#focus').click(),sidebar:()=>$('#sidebar-toggle').click(),print:()=>{$('#export').value='pdf';$('#export').dispatchEvent(new Event('change'));}};
+    const commands={recent:()=>showRecent(),new:()=>add(),open,save:()=>save(),'save-as':()=>save(true),close:()=>closeDoc().catch(e=>notify(e.message)),find:toggleFind,focus:()=>$('#focus').click(),sidebar:()=>$('#sidebar-toggle').click(),print:()=>{$('#export').value='pdf';$('#export').dispatchEvent(new Event('change'));}};
     commands[action]?.();
   });
   window.inkstone.ready().catch(e=>notify(e.message));
+}
+
+async function showRecent(){
+  try{
+    const paths=await window.inkstone.recent();
+    if(!paths.length){notify('暂无最近文件');return;}
+    const dialog=document.createElement('dialog');const title=document.createElement('h3');title.textContent='最近打开';dialog.append(title);
+    paths.forEach((path,index)=>{const button=document.createElement('button');button.textContent=path;button.style.display='block';button.onclick=async()=>{dialog.close();try{await acceptFile(await window.inkstone.openRecent(index));}catch(e){notify(e.message);}};dialog.append(button);});
+    const close=document.createElement('button');close.textContent='取消';close.onclick=()=>dialog.close();dialog.append(close);dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();
+  }catch(e){notify(e.message);}
 }

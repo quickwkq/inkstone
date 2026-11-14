@@ -1,15 +1,10 @@
 name: Build macOS installers
 on:
   workflow_dispatch:
-    inputs:
-      signed:
-        description: 'Require Developer ID signing and Apple notarization'
-        type: boolean
-        default: false
   push:
-    branches: [main, feat/macos-distribution]
+    branches: [main, feat/macos-distribution, feat/tauri-migration]
   pull_request:
-    branches: [main]
+    branches: [main, feat/macos-distribution]
 permissions:
   contents: read
 concurrency:
@@ -20,7 +15,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [arm64, x64]
+        include:
+          - target: aarch64-apple-darwin
+            arch: arm64
+          - target: x86_64-apple-darwin
+            arch: x64
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -28,19 +27,11 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - run: rustup show
       - run: npm ci
-      - run: npm test
-      - run: npm run build && npm run icons
-      - name: Build installers
-        run: npx electron-builder --mac dmg zip --${{ matrix.arch }} --publish never
-        env:
-          INKSTONE_SIGNED: ${{ inputs.signed && '1' || '0' }}
-          CSC_LINK: ${{ inputs.signed && secrets.CSC_LINK || '' }}
-          CSC_KEY_PASSWORD: ${{ inputs.signed && secrets.CSC_KEY_PASSWORD || '' }}
-          APPLE_ID: ${{ inputs.signed && secrets.APPLE_ID || '' }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ inputs.signed && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
-          APPLE_TEAM_ID: ${{ inputs.signed && secrets.APPLE_TEAM_ID || '' }}
-      - run: npm run checksums
+      - run: npm test && npm run test:native
+      - run: npx tauri build --target ${{ matrix.target }}
+      - run: node scripts/collect.mjs && npm run checksums
       - uses: actions/upload-artifact@v4
         with:
           name: Inkstone-mac-${{ matrix.arch }}
