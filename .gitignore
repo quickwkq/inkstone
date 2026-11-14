@@ -5,3 +5,7 @@ output/
 .DS_Store
 public/vendor/
 .playwright-cli/
+build/icon.icns
+build/icon.png
+build/icon.iconset/
+build/dmg-background.png

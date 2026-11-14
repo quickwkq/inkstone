@@ -1,0 +1,49 @@
+name: Build macOS installers
+on:
+  workflow_dispatch:
+    inputs:
+      signed:
+        description: 'Require Developer ID signing and Apple notarization'
+        type: boolean
+        default: false
+  push:
+    branches: [main, feat/macos-distribution]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x64]
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build && npm run icons
+      - name: Build installers
+        run: npx electron-builder --mac dmg zip --${{ matrix.arch }} --publish never
+        env:
+          INKSTONE_SIGNED: ${{ inputs.signed && '1' || '0' }}
+          CSC_LINK: ${{ inputs.signed && secrets.CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ inputs.signed && secrets.CSC_KEY_PASSWORD || '' }}
+          APPLE_ID: ${{ inputs.signed && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ inputs.signed && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ inputs.signed && secrets.APPLE_TEAM_ID || '' }}
+      - run: npm run checksums
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Inkstone-mac-${{ matrix.arch }}
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
