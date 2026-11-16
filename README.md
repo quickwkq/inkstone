@@ -27,6 +27,8 @@ npm run checksums
 
 默认发行版没有 Developer ID 签名或 Apple 公证，没有自动更新。Intel 包可交叉构建，但需要 Intel 真机独立验收。
 
+0.3.2 支持已打开 Markdown 文件同目录及子目录中的本地图片，例如 `![图片](images/001.jpg)`，包括中文和空格路径。即时编辑、阅读和恢复草稿均按绑定的文档目录解析；HTML 导出会嵌入本地图片。请保留 Markdown 与 images 目录的相对位置；浏览器预览版无法直接读取本机目录。磁盘目录之外的图片、绝对路径和 file:// 链接暂不支持，单图限制 20 MB。
+
 ## 参考与许可证
 
 独立实现界面与文件管理，没有复用 Typora 源码或素材。先前 Typora 1.8.10 静态调查仅覆盖一个 JavaScript 文件，不代表其完整架构。Vditor：https://github.com/Vanessa219/vditor 。第三方依赖遵循各自许可证。

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Inkstone",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "identifier": "com.quickwkq.inkstone",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -11,7 +11,7 @@
   },
   "app": {
     "windows": [{"label":"main","create":false,"title":"墨页 · Inkstone","width":1280,"height":900,"minWidth":760,"minHeight":540}],
-    "security": {"csp":"default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: data: blob: https: http:; font-src 'self' data:; connect-src ipc: http://ipc.localhost 'self'"}
+    "security": {"csp":"default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' inkstone-image: asset: data: blob: https: http:; font-src 'self' data:; connect-src inkstone-image: ipc: http://ipc.localhost 'self'"}
   },
   "bundle": {
     "active":true,

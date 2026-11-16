@@ -5,6 +5,7 @@ import 'vditor/dist/index.css';
 import './document.css';
 import './style.css';
 import {welcome,makeDoc,safeName,outline,loadDocs} from './model';
+import {imageBase,embedLocalImages} from './images';
 
 const $=s=>document.querySelector(s);
 let docs, recoveryError=false;
@@ -21,15 +22,15 @@ function renderOutline(){$('#outline').replaceChildren();outline(current().conte
 function refresh(){ $('#title').value=current().name;renderFiles();renderOutline();stats(); }
 function capture(){if(ready&&mode!=='read')current().content=editor.getValue();}
 function switchDoc(id){capture();persist();active=id;persist();refresh();mount();}
-function mount(){const ticket=++generation;ready=false;editor?.destroy();editor=null;$('#editor').innerHTML='';$('#editor').hidden=mode==='read';$('#reader').hidden=mode!=='read';if(mode==='read'){renderReader();return;}editor=new Vditor('editor',{cdn:new URL('vendor/vditor',document.baseURI).href,lang:'zh_CN',mode,theme:dark?'dark':'classic',height:'100%',value:current().content,cache:{enable:false},toolbar:['headings','bold','italic','strike','|','list','ordered-list','check','quote','code','inline-code','link','table','|','undo','redo'],outline:{enable:false},preview:{markdown:{toc:false},hljs:{enable:false},math:{engine:'KaTeX'},theme:{current:dark?'dark':'light',path:new URL('vendor/vditor/dist/css/content-theme',document.baseURI).href}},input:value=>{if(ticket===generation)sync(value);},after:()=>{if(ticket===generation)ready=true;}});}
-async function html(){return DOMPurify.sanitize(await Vditor.md2html(current().content,{cdn:new URL('vendor/vditor',document.baseURI).href}),{FORBID_TAGS:['style','iframe'],FORBID_ATTR:['style']});}
+function mount(){const ticket=++generation;ready=false;editor?.destroy();editor=null;$('#editor').innerHTML='';$('#editor').hidden=mode==='read';$('#reader').hidden=mode!=='read';if(mode==='read'){renderReader();return;}editor=new Vditor('editor',{cdn:new URL('vendor/vditor',document.baseURI).href,lang:'zh_CN',mode,theme:dark?'dark':'classic',height:'100%',value:current().content,cache:{enable:false},toolbar:['headings','bold','italic','strike','|','list','ordered-list','check','quote','code','inline-code','link','table','|','undo','redo'],outline:{enable:false},preview:{markdown:{toc:false,linkBase:window.inkstone?imageBase(current().id):''},hljs:{enable:false},math:{engine:'KaTeX'},theme:{current:dark?'dark':'light',path:new URL('vendor/vditor/dist/css/content-theme',document.baseURI).href}},input:value=>{if(ticket===generation)sync(value);},after:()=>{if(ticket===generation)ready=true;}});}
+async function html(){const doc=current();const body=DOMPurify.sanitize(await Vditor.md2html(doc.content,{cdn:new URL('vendor/vditor',document.baseURI).href}),{FORBID_TAGS:['style','iframe'],FORBID_ATTR:['style']});return window.inkstone?embedLocalImages(body,doc.id):body;}
 async function renderReader(){const ticket=generation;const body=await html();if(ticket===generation)$('#reader').innerHTML=body;}
 async function download(name,content,type){if(window.inkstone&&type.startsWith('text/html'))return window.inkstone.exportHTML(name,content);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 async function save(saveAs=false){
   capture();persist();const doc=current(), savedContent=doc.content;
   try{
     if(window.inkstone){const result=await window.inkstone.save({id:doc.id,name:doc.name,content:savedContent,saveAs});
-      if(!result)return false;doc.name=result.name;doc.savedContent=savedContent;
+      if(!result)return false;doc.name=result.name;doc.savedContent=savedContent;if(current().id===doc.id)mount();
     }else{download(doc.name,savedContent,'text/markdown;charset=utf-8');doc.savedContent=savedContent;}
     refresh();persist();notify(window.inkstone?'文件已保存':'Markdown 已下载');return true;
   }catch(e){notify('保存失败：'+e.message);return false;}
@@ -37,7 +38,7 @@ async function save(saveAs=false){
 async function acceptFile(file){
   if(file.existingId&&docs.some(d=>d.id===file.existingId)){switchDoc(file.existingId);notify('已切换到工作空间中的文档，保留当前草稿');return;}
   add(file.name,file.content);const doc=current();doc.savedContent=file.content;
-  await window.inkstone.bind({id:doc.id,token:file.token});persist();
+  await window.inkstone.bind({id:doc.id,token:file.token});persist();if(current().id===doc.id)mount();
 }
 async function closeDoc(){
   capture();const doc=current();
