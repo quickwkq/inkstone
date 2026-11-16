@@ -1,4 +1,5 @@
 mod files;
+mod images;
 use std::{collections::HashMap, path::PathBuf, sync::{Mutex, atomic::{AtomicBool, Ordering}}};
 use serde::{Deserialize, Serialize};
 use tauri::{Emitter, Manager};
@@ -70,6 +71,18 @@ fn receive(app: &tauri::AppHandle, file: PathBuf) {
 #[tauri::command] fn open_recent(app:tauri::AppHandle,index:usize)->Result<serde_json::Value,String>{let path=app.state::<State>().settings.lock().unwrap().recent.get(index).cloned().ok_or("记录不存在")?;make_file(&app,path)}
 fn main() {
     tauri::Builder::default().plugin(tauri_plugin_dialog::init())
+    .register_uri_scheme_protocol("inkstone-image", |ctx, request| {
+        let result = (|| -> Result<_, String> {
+            let (id, relative)=request.uri().path().trim_start_matches('/').split_once('/').ok_or("无效图片地址")?;
+            let state=ctx.app_handle().state::<State>();
+            let document=state.settings.lock().unwrap().bindings.get(id).map(|b|b.file.clone()).ok_or("文档尚未关联磁盘文件")?;
+            images::read(&document,relative)
+        })();
+        match result {
+            Ok((data,mime))=>tauri::http::Response::builder().header("Content-Type",mime).header("Access-Control-Allow-Origin","*").header("Cache-Control","no-store").body(data).unwrap(),
+            Err(_)=>tauri::http::Response::builder().status(404).body(Vec::new()).unwrap()
+        }
+    })
     .setup(|app|{
         let dir=app.path().app_data_dir()?; std::fs::create_dir_all(&dir)?; let path=dir.join("documents.json");
         let settings=if path.exists(){serde_json::from_str(&std::fs::read_to_string(&path)?)?}else{Settings::default()};

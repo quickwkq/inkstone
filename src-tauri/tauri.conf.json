@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Inkstone",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "identifier": "com.quickwkq.inkstone",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -11,7 +11,7 @@
   },
   "app": {
     "windows": [{"label":"main","create":false,"title":"墨页 · Inkstone","width":1280,"height":900,"minWidth":760,"minHeight":540}],
-    "security": {"csp":"default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: data: blob: https: http:; font-src 'self' data:; connect-src ipc: http://ipc.localhost 'self'"}
+    "security": {"csp":"default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' inkstone-image: asset: data: blob: https: http:; font-src 'self' data:; connect-src inkstone-image: ipc: http://ipc.localhost 'self'"}
   },
   "bundle": {
     "active":true,
@@ -20,6 +20,6 @@
     "copyright":"© 2026 Inkstone",
     "shortDescription":"本地 Markdown 阅读编辑器",
     "fileAssociations":[{"ext":["md","markdown","txt"],"name":"Markdown document","role":"Editor"}],
-    "macOS":{"minimumSystemVersion":"13.0","dmg":{"windowSize":{"width":640,"height":420},"appPosition":{"x":180,"y":190},"applicationFolderPosition":{"x":460,"y":190}}}
+    "macOS":{"signingIdentity":"-","minimumSystemVersion":"13.0","dmg":{"windowSize":{"width":640,"height":420},"appPosition":{"x":180,"y":190},"applicationFolderPosition":{"x":460,"y":190}}}
   }
 }

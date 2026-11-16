@@ -1492,8 +1492,9 @@ dependencies = [
 
 [[package]]
 name = "inkstone"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
+ "percent-encoding",
  "serde",
  "serde_json",
  "sha2",

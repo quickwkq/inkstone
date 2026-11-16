@@ -1,0 +1,80 @@
+/* Shared reading and editing typography. Never alter the Markdown to style it. */
+.vditor-reset {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1.75 !important;
+  color: var(--text) !important;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-align: start;
+}
+.vditor-reset :is(h1,h2,h3,h4,h5,h6) {
+  color: var(--text) !important;
+  border: 0 !important;
+  padding-bottom: 0 !important;
+  font-weight: 650;
+  line-height: 1.4 !important;
+  letter-spacing: -.02em;
+  overflow-wrap: anywhere;
+}
+.vditor-reset h1 { font-size: 30px !important; margin: 0 0 1em !important; }
+.vditor-reset h2 { font-size: 23px !important; margin: 1.65em 0 .65em !important; }
+.vditor-reset h3 { font-size: 19px !important; margin: 1.4em 0 .6em !important; }
+.vditor-reset :is(h4,h5,h6) { font-size: 16px !important; margin: 1.3em 0 .5em !important; }
+.vditor-reset > :first-child { margin-top: 0 !important; }
+.vditor-reset p { margin: 0 0 .85em !important; overflow-wrap: anywhere; }
+.vditor-reset :is(ul,ol) { margin: .5em 0 1em; padding-left: 1.6em; }
+.vditor-reset li { margin: .25em 0; }
+.vditor-reset li > p { margin-bottom: .3em !important; }
+.vditor-reset li :is(ul,ol) { margin: .25em 0; }
+.vditor-reset blockquote {
+  margin: 1.15em 0 !important;
+  padding: .1em 0 .1em 1.1em !important;
+  border-left: 3px solid var(--quote-line) !important;
+  color: var(--secondary) !important;
+  background: transparent;
+}
+.vditor-reset blockquote > :last-child { margin-bottom: 0 !important; }
+.vditor-reset blockquote:not(.callout)::before { display: none; }
+.vditor-reset a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.vditor-reset :not(pre) > code { font-family: var(--mono); font-size: .87em; background: var(--code); padding: .15em .35em; border-radius: 4px; }
+.vditor-reset pre:not(.vditor-reset) { max-width: 100%; border-radius: 6px; background: var(--code); }
+.vditor-reset pre > code {
+  font-family: var(--mono) !important;
+  font-size: 13px !important;
+  line-height: 1.65;
+  padding: 16px !important;
+  background: var(--code) !important;
+  color: var(--text);
+  white-space: pre;
+  overflow: auto;
+  overflow-wrap: normal;
+}
+.vditor-reset table { display: block; width: max-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: 14px; margin: 1.2em 0; }
+.vditor-reset :is(th,td) { border: 1px solid var(--line) !important; padding: 8px 12px !important; min-width: 80px; }
+.vditor-reset th { font-weight: 600; background: var(--side); }
+.vditor-reset tr { background: transparent !important; }
+.vditor-reset hr { height: 1px; border: 0; background: var(--line); margin: 2em 0; }
+.vditor-reset img { display: inline-block; max-width: 100%; height: auto; border-radius: 4px; }
+.vditor-reset input[type=checkbox] { accent-color: var(--accent); }
+.vditor-ir :is(h1,h2,h3,h4,h5,h6)::before { opacity: 0; transition: opacity .15s; font-size: 10px; color: var(--muted); }
+.vditor-ir :is(h1,h2,h3,h4,h5,h6):hover::before { opacity: .65; }
+.vditor-ir pre.vditor-reset {
+  width: 100%; min-width: 0; margin: 0; border-radius: 0;
+  padding: 40px max(32px, calc((100% - 720px) / 2)) 100px !important;
+  background: var(--paper) !important;
+  overflow-wrap: anywhere;
+}
+.vditor-sv {
+  min-width: 0;
+  padding: 40px max(28px, calc((100% - 800px) / 2)) 100px !important;
+  font-family: var(--mono) !important; font-size: 14px !important; line-height: 1.8 !important;
+  background: var(--paper) !important; color: var(--text) !important;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+#reader { width: 100%; max-width: 784px; margin: 0 auto; padding: 40px 32px 100px; }
+@media(max-width:650px) {
+  .vditor-ir pre.vditor-reset,.vditor-sv { padding: 28px 24px 80px !important; }
+  #reader { padding: 28px 24px 80px; }
+  .vditor-reset h1 { font-size: 27px !important; }
+}

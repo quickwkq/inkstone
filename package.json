@@ -1,6 +1,6 @@
 {
   "name": "inkstone",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "private": true,
   "type": "module",
   "description": "墨页 · Local-first Markdown editor",
@@ -10,7 +10,7 @@
     "prestart": "node scripts/assets.mjs && npm run icons",
     "start": "tauri dev",
     "pack": "tauri build --bundles app",
-    "test": "node --test tests/model.test.mjs",
+    "test": "node --test tests/*.test.mjs",
     "icons": "node scripts/icons.mjs",
     "dist:mac": "tauri build && node scripts/collect.mjs",
     "dist:all": "tauri build --target aarch64-apple-darwin && tauri build --target x86_64-apple-darwin && node scripts/collect.mjs",
