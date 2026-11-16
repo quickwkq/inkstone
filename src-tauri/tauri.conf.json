@@ -20,6 +20,6 @@
     "copyright":"© 2026 Inkstone",
     "shortDescription":"本地 Markdown 阅读编辑器",
     "fileAssociations":[{"ext":["md","markdown","txt"],"name":"Markdown document","role":"Editor"}],
-    "macOS":{"minimumSystemVersion":"13.0","dmg":{"windowSize":{"width":640,"height":420},"appPosition":{"x":180,"y":190},"applicationFolderPosition":{"x":460,"y":190}}}
+    "macOS":{"signingIdentity":"-","minimumSystemVersion":"13.0","dmg":{"windowSize":{"width":640,"height":420},"appPosition":{"x":180,"y":190},"applicationFolderPosition":{"x":460,"y":190}}}
   }
 }

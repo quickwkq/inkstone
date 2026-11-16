@@ -20,6 +20,8 @@ CI 分别构建两个架构，构建产物保留 14 天，不自动发布。上�
 
 ## 未签名测试版
 
+Tauri 的 `bundle.macOS.signingIdentity` 显式设为 `-`，对完整 App bundle 做 ad-hoc 签名。仅依赖链接器给 Mach-O 可执行文件生成的签名会导致 bundle 校验失败（`code has no resources but signature indicates they must be present`）。收集安装包前必须通过 `codesign --verify --deep --strict`；发行验收还需挂载 DMG，校验其中的 App 并实际启动。ad-hoc 校验通过不能证明 Gatekeeper 信任或公证通过。
+
 当前不配置 Developer ID 证书或 Apple 公证。架构要求的 ad-hoc 签名不等于 Developer ID 签名。下载页标明“未签名 / 未公证测试版”，不要宣称通过 Gatekeeper。首次打开按 [Apple 官方说明](https://support.apple.com/en-us/102445)处理，不关闭系统保护。未来签名发行需另行配置 Tauri 的 Apple 签名/公证环境并验证 stapler 和 spctl。
 
 ## 0.2 → 0.3 草稿迁移
