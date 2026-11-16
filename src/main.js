@@ -2,6 +2,7 @@ import './native';
 import Vditor from 'vditor';
 import DOMPurify from 'dompurify';
 import 'vditor/dist/index.css';
+import './document.css';
 import './style.css';
 import {welcome,makeDoc,safeName,outline,loadDocs} from './model';
 
