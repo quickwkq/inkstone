@@ -42,6 +42,7 @@ console.log(idea);
 慢慢写，不必急。
 `;
 export function makeDoc(name='未命名.md',content='') { return {id:crypto.randomUUID(),name,content,updated:Date.now()}; }
+export function hasUnsavedChanges(doc) { return doc.content !== (doc.savedContent ?? ''); }
 export function safeName(name) { return (name.trim().replace(/[\\/:*?"<>|]/g,'-') || '未命名').replace(/\.md$/i,'')+'.md'; }
 export function outline(md) {let fence=false;return md.split('\n').flatMap((line,index)=>{if(/^\s*(```|~~~)/.test(line)){fence=!fence;return [];}const m=!fence&&/^(#{1,6})\s+(.+?)(?:\s+#+)?$/.exec(line);return m?[{level:m[1].length,text:m[2],line:index}]:[];});}
 export function loadDocs(storage) { const raw=storage.getItem('inkstone.docs'); if(!raw)return [makeDoc('欢迎来到墨页.md',welcome)];const parsed=JSON.parse(raw);if(!Array.isArray(parsed)||!parsed.every(d=>typeof d.id==='string'&&typeof d.name==='string'&&typeof d.content==='string'))throw Error('草稿数据格式异常，原始数据已保留。');return parsed.length?parsed:[makeDoc()]; }

@@ -2,9 +2,9 @@ name: Build macOS installers
 on:
   workflow_dispatch:
   push:
-    branches: [main, feat/macos-distribution, feat/tauri-migration, feat/editor-typography]
+    branches: [main, feat/macos-distribution, feat/tauri-migration, feat/editor-typography, feat/neutral-system-theme]
   pull_request:
-    branches: [main, feat/macos-distribution, feat/tauri-migration]
+    branches: [main, feat/macos-distribution, feat/tauri-migration, feat/editor-typography]
 permissions:
   contents: read
 concurrency:

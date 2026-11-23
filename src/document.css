@@ -37,7 +37,7 @@
 .vditor-reset blockquote > :last-child { margin-bottom: 0 !important; }
 .vditor-reset blockquote:not(.callout)::before { display: none; }
 .vditor-reset a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
-.vditor-reset :not(pre) > code { font-family: var(--mono); font-size: .87em; background: var(--code); padding: .15em .35em; border-radius: 4px; }
+.vditor-reset :not(pre) > code { font-family: var(--mono); font-size: .87em; background: var(--code) !important; color: var(--text); padding: .15em .35em; border-radius: 4px; }
 .vditor-reset pre:not(.vditor-reset) { max-width: 100%; border-radius: 6px; background: var(--code); }
 .vditor-reset pre > code {
   font-family: var(--mono) !important;

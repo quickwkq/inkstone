@@ -1,9 +1,10 @@
 :root {
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
   font-synthesis: none; color: var(--text); background: var(--paper);
-  --paper: #fff; --side: #f5f5f3; --line: #e7e7e3; --text: #2d302e;
-  --secondary: #626762; --muted: #767b76; --accent: #486b55; --active: #e7eee8;
-  --code: #f5f6f4; --quote-line: #c7d3c9; --mono: 'SFMono-Regular', Menlo, Consolas, monospace;
+  color-scheme: light;
+  --paper: #fff; --side: #fafafa; --line: #e8e8e8; --text: #262626;
+  --secondary: #595959; --muted: #737373; --accent: #333; --active: #ededed;
+  --code: #f5f5f5; --quote-line: #ccc; --mono: 'SFMono-Regular', Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
 body { margin: 0; }
@@ -32,6 +33,9 @@ kbd { float: right; font-size: 10px; color: var(--muted); margin-top: 1px; font-
 #outline { flex: 1; min-height: 0; overflow: auto; }
 #outline button { display: block; width: 100%; text-align: left; font-size: 12px; line-height: 1.5; color: var(--secondary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding-block: 5px; }
 .sidebar-bottom { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding: 10px 8px 0; font-size: 11px; color: var(--muted); }
+.theme-control { display: flex; align-items: center; gap: 6px; }
+#theme { font-size: 11px; border: 1px solid var(--line); background: var(--paper); padding: 5px; }
+.empty-state { padding: 12px 10px; color: var(--muted); font-size: 12px; line-height: 1.6; }
 main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 header { display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 20px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
 #title { min-width: 80px; width: clamp(120px,18vw,240px); border: 0; background: transparent; color: var(--text); font-size: 13px; font-weight: 550; text-overflow: ellipsis; padding: 6px 0; }
@@ -42,7 +46,7 @@ select { color: var(--text); border: 0; background: transparent; padding: 6px; b
 .modebar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 22px; height: 44px; font-size: 11px; color: var(--secondary); flex-shrink: 0; }
 .modes { display: flex; gap: 2px; background: var(--side); padding: 2px; border-radius: 6px; }
 .modes button { padding: 4px 12px; }
-.modes .selected { background: var(--paper); color: var(--text); box-shadow: 0 1px 3px #27332b12; font-weight: 550; }
+.modes .selected { background: var(--paper); color: var(--text); box-shadow: 0 1px 3px #0000000d; font-weight: 550; }
 .canvas { flex: 1; min-height: 0; min-width: 0; overflow: auto; }
 #editor { height: 100%; border: 0; border-radius: 0; background: var(--paper); }
 .vditor-content,.vditor-ir,.vditor-preview { min-width: 0; background: var(--paper); }
@@ -59,12 +63,13 @@ footer { display: flex; justify-content: space-between; align-items: center; hei
 #notice.visible { opacity: 1; }
 #findbar { display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 7px 20px; background: var(--side); border-bottom: 1px solid var(--line); font-size: 12px; }
 #find-query { width: min(260px,70vw); background: var(--paper); color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 6px 10px; }
-dialog { max-width: min(600px,90vw); max-height: 75dvh; overflow: auto; border: 1px solid var(--line); border-radius: 10px; padding: 24px; background: var(--paper); color: var(--text); box-shadow: 0 12px 48px #18231b24; }
-dialog::backdrop { background: #18231b40; }
+dialog { max-width: min(600px,90vw); max-height: 75dvh; overflow: auto; border: 1px solid var(--line); border-radius: 10px; padding: 24px; background: var(--paper); color: var(--text); box-shadow: 0 12px 48px #00000024; }
+dialog::backdrop { background: #00000040; }
 dialog button { max-width: 100%; overflow-wrap: anywhere; text-align: left; }
-[data-theme=dark] { --paper: #222423; --side: #1c1e1d; --line: #363a37; --text: #dedfda; --secondary: #adb2ac; --muted: #9aa098; --accent: #a0bea8; --active: #303c33; --code: #2c302d; --quote-line: #526858; color-scheme: dark; }
+[data-theme=dark] { --paper: #202020; --side: #191919; --line: #363636; --text: #e6e6e6; --secondary: #b8b8b8; --muted: #a0a0a0; --accent: #e0e0e0; --active: #303030; --code: #292929; --quote-line: #555; color-scheme: dark; }
+#editor { --toolbar-background: var(--paper); --panel-background-color: var(--paper); --textarea-background-color: var(--paper); --textarea-text-color: var(--text); --text-color: var(--text); --second-color: var(--secondary); --border-color: var(--line); --hover-background-color: var(--active); }
 @media(max-width:1050px) { #save-state { display: none; } header { padding: 0 12px; gap: 6px; } .modebar { padding: 0 14px; } }
 @media(max-width:850px) { #app { grid-template-columns: 200px minmax(0,1fr); } .sidebar { padding-inline: 10px; } .header-actions button { padding-inline: 7px; } #title { width: 130px; } }
 @media(max-width:650px) { #app { grid-template-columns: minmax(0,1fr); } .sidebar { display: none; } .modebar { padding: 0 10px; } .modebar button { padding-inline: 8px; } header { padding: 0 8px; } #title { width: 110px; } footer { padding: 0 12px; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { transition: none !important; scroll-behavior: auto !important; } }
-@media print { .sidebar,header,.modebar,footer,#editor,#notice,#findbar { display: none !important; } #app,main,.canvas { display: block !important; height: auto !important; overflow: visible !important; } #reader { display: block !important; max-width: none; padding: 0; --text: #222; --paper: #fff; --line: #ddd; --side: #f5f5f3; --code: #f5f6f4; --accent: #486b55; --secondary: #626762; } body { background: white; } }
+@media print { .sidebar,header,.modebar,footer,#editor,#notice,#findbar { display: none !important; } #app,main,.canvas { display: block !important; height: auto !important; overflow: visible !important; } #reader { display: block !important; max-width: none; padding: 0; --text: #222; --paper: #fff; --line: #ddd; --side: #f5f5f5; --code: #f5f5f5; --accent: #333; --secondary: #595959; } body { background: white; } }
