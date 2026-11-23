@@ -2,9 +2,10 @@ name: Build macOS installers
 on:
   workflow_dispatch:
   push:
-    branches: [main, feat/macos-distribution, feat/tauri-migration, feat/editor-typography]
+    tags: ['v*']
+    branches: [main, feat/macos-distribution, feat/tauri-migration, feat/editor-typography, feat/neutral-system-theme]
   pull_request:
-    branches: [main, feat/macos-distribution, feat/tauri-migration]
+    branches: [main, feat/macos-distribution, feat/tauri-migration, feat/editor-typography]
 permissions:
   contents: read
 concurrency:
@@ -29,6 +30,7 @@ jobs:
           cache: npm
       - run: rustup show
       - run: npm ci
+      - run: npm run check:version
       - run: npm test && npm run test:native
       - run: npx tauri build --target ${{ matrix.target }}
       - run: node scripts/collect.mjs && npm run checksums

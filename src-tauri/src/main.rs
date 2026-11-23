@@ -57,9 +57,10 @@ fn receive(app: &tauri::AppHandle, file: PathBuf) {
     let path=if binding.is_none()||save_as||!same_name {
         let suggested=if save_as&&binding.is_some(){format!("{} 副本.md",std::path::Path::new(&basename).file_stem().unwrap_or_default().to_string_lossy())}else{basename};
         match app.dialog().file().add_filter("Markdown",&["md"]).set_file_name(suggested).blocking_save_file(){Some(p)=>p.into_path().map_err(|e|e.to_string())?,None=>return Ok(None)}
-    } else {binding.unwrap().file};
+    } else {binding.as_ref().unwrap().file.clone()};
+    let path_changed=binding.as_ref().map(|b|b.file!=path).unwrap_or(true);
     files::atomic_write(&path,&content)?; let mut settings=s.settings.lock().unwrap(); settings.bindings.insert(id,Binding{file:path.clone(),hash:files::digest(&content)}); remember(&mut settings,&path);persist(&s,&settings)?;
-    Ok(Some(serde_json::json!({"name":path.file_name().unwrap_or_default().to_string_lossy()})))
+    Ok(Some(serde_json::json!({"name":path.file_name().unwrap_or_default().to_string_lossy(),"pathChanged":path_changed})))
 }
 #[tauri::command] async fn export_html(app:tauri::AppHandle,name:String,content:String)->Result<bool,String> {
     if content.len()>50*1024*1024 {return Err("导出内容过大".into());}
