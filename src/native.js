@@ -13,6 +13,7 @@ if (isTauri()) {
     exportHTML:(name,content)=>call('export_html',{name,content}),
     print:()=>call('print_document'),
     recent:()=>call('recent_documents'),
+    locations:()=>call('document_locations'),
     openRecent:index=>call('open_recent',{index}),
     find:({text})=>text ? window.find(text) : false,
     onOpen:callback=>subscriptions.push(listen('document-opened',event=>callback(event.payload))),

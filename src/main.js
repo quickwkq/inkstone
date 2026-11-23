@@ -7,6 +7,7 @@ import './style.css';
 import {makeDoc,safeName,outline,loadDocs,hasUnsavedChanges} from './model';
 import {imageBase,embedLocalImages} from './images';
 import {createTheme} from './theme';
+import {createDocumentTree,documentRow,recentDrafts} from './sidebar';
 import {highlightHTML,exportCodeStyle} from './highlight';
 
 const $=s=>document.querySelector(s);
@@ -14,16 +15,36 @@ let docs, recoveryError=false;
 try{docs=loadDocs(localStorage);}catch(e){docs=[makeDoc('恢复说明.md', '# 草稿恢复失败\n\n'+e.message)];recoveryError=true;}
 let active=docs.find(d=>d.id===localStorage.getItem('inkstone.active'))?.id||docs[0].id, generation=0, editor, mode='ir', ready=false, dark=false;
 const current=()=>docs.find(d=>d.id===active);
-document.querySelector('#app').innerHTML=`<aside class="sidebar"><div class="brand"><span class="brand-mark">墨</span><div>墨页 <small>INKSTONE</small></div></div><button class="new primary">＋ 新建文档 <kbd>⌘ N</kbd></button><input class="search" aria-label="搜索文档" placeholder="搜索文档…"><div class="section-label">我的文档 <span id="doc-count"></span></div><div id="files"></div><div class="outline-title section-label">文档大纲</div><nav id="outline" aria-label="文档大纲"></nav><div class="sidebar-bottom"><label class="theme-control"><span id="theme-icon" aria-hidden="true"></span><select id="theme" aria-label="外观主题"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label></div></aside><main><header><button id="sidebar-toggle" title="切换侧栏" aria-label="切换侧栏">☰</button><input id="title" aria-label="文件名"><div class="header-actions"><button id="open">打开</button><button id="save" class="save">保存文件</button><button id="save-as" title="另存为（⇧⌘S）">另存为</button><select id="export" aria-label="导出"><option value="">导出</option><option value="html">HTML</option><option value="pdf">打印 / PDF</option></select></div></header><div class="modebar"><div class="modes"><button data-mode="ir" class="selected">即时编辑</button><button data-mode="sv">源码</button><button data-mode="read">阅读</button></div><div><button id="find-toggle">查找</button><button id="close-doc" title="关闭当前文档">关闭文档</button><button id="focus">专注模式</button></div></div><div id="findbar" hidden><input id="find-query" aria-label="查找当前文档" placeholder="查找当前文档…"><button id="find-next">查找</button><button id="find-close" aria-label="关闭查找">×</button></div><section class="canvas"><div id="editor"></div><article id="reader" class="vditor-reset" hidden></article></section><footer><span id="stats"></span><div class="footer-status"><span class="format-info">Markdown <span class="footer-dot">·</span> UTF-8</span><span id="save-state" role="status">草稿已保存</span></div></footer></main><div id="notice" role="status"></div><input type="file" id="file-input" accept=".md,.markdown,.txt" hidden>`;
+document.querySelector('#app').innerHTML=`<aside class="sidebar"><div class="brand"><span class="brand-mark">墨</span><div>墨页 <small>INKSTONE</small></div></div><button class="new primary">＋ 新建文档 <kbd>⌘ N</kbd></button><input class="search" aria-label="搜索文档" placeholder="搜索文档…"><div class="sidebar-scroll"><details id="documents-section" class="sidebar-section" open><summary>文档 <span id="doc-count"></span></summary><div id="files"></div></details><details id="recent-section" class="sidebar-section"><summary>最近</summary><div id="recent-files"></div></details><details id="outline-section" class="sidebar-section" open><summary>文档大纲</summary><nav id="outline" aria-label="文档大纲"></nav></details></div><div class="sidebar-bottom"><label class="theme-control"><span id="theme-icon" aria-hidden="true"></span><select id="theme" aria-label="外观主题"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label></div></aside><main><header><button id="sidebar-toggle" title="切换侧栏" aria-label="切换侧栏">☰</button><input id="title" aria-label="文件名"><div class="header-actions"><button id="open">打开</button><button id="save" class="save">保存文件</button><button id="save-as" title="另存为（⇧⌘S）">另存为</button><select id="export" aria-label="导出"><option value="">导出</option><option value="html">HTML</option><option value="pdf">打印 / PDF</option></select></div></header><div class="modebar"><div class="modes"><button data-mode="ir" class="selected">即时编辑</button><button data-mode="sv">源码</button><button data-mode="read">阅读</button></div><div><button id="find-toggle">查找</button><button id="close-doc" title="关闭当前文档">关闭文档</button><button id="focus">专注模式</button></div></div><div id="findbar" hidden><input id="find-query" aria-label="查找当前文档" placeholder="查找当前文档…"><button id="find-next">查找</button><button id="find-close" aria-label="关闭查找">×</button></div><section class="canvas"><div id="editor"></div><article id="reader" class="vditor-reset" hidden></article></section><footer><span id="stats"></span><div class="footer-status"><span class="format-info">Markdown <span class="footer-dot">·</span> UTF-8</span><span id="save-state" role="status">草稿已保存</span></div></footer></main><div id="notice" role="status"></div><input type="file" id="file-input" accept=".md,.markdown,.txt" hidden>`;
+const tree=createDocumentTree({root:$('#files'),storage:localStorage,onSelect:switchDoc});
+for(const id of ['documents-section','recent-section','outline-section']){
+  const section=$('#'+id);section.open=tree.isOpen('section:'+id,id!=='recent-section');
+  section.querySelector('summary').onclick=event=>{event.preventDefault();section.open=!section.open;tree.remember('section:'+id,section.open);};
+  section.addEventListener('toggle',()=>{tree.remember('section:'+id,section.open);if(id==='recent-section'&&section.open)renderRecent();});
+}
+let recentRequest=0;
+async function renderRecent(){
+  const ticket=++recentRequest,root=$('#recent-files');root.textContent='正在加载…';
+  try{
+    const paths=window.inkstone?await window.inkstone.recent():null;
+    if(ticket!==recentRequest)return;root.replaceChildren();
+    const rows=paths?paths.map((path,index)=>({id:docs.find(d=>d.path===path)?.id,name:path.split('/').pop(),path,index})):recentDrafts(docs);
+    for(const row of rows)root.append(documentRow(row,active,async()=>{
+      try{if(row.id&&docs.some(d=>d.id===row.id))switchDoc(row.id);else await acceptFile(await window.inkstone.openRecent(row.index));}
+      catch(e){notify('打开失败：'+e.message);}
+    }));
+    if(!rows.length)root.textContent='暂无最近打开的文件';
+  }catch(e){if(ticket!==recentRequest)return;root.textContent='最近文件加载失败';const retry=document.createElement('button');retry.textContent='重试';retry.onclick=renderRecent;root.append(retry);}
+}
 function notify(text){$('#notice').textContent=text;$('#notice').classList.add('visible');clearTimeout(notify.timer);notify.timer=setTimeout(()=>$('#notice').classList.remove('visible'),4000);}
 function persist(){try{if(recoveryError)throw Error('原始草稿受保护，请先保存文件');localStorage.setItem('inkstone.docs',JSON.stringify(docs));localStorage.setItem('inkstone.active',active);$('#save-state').textContent='草稿已保存';return true;}catch(e){$('#save-state').textContent='草稿未保存，请保存文件';return false;}}
 function sync(value){current().content=value;current().updated=Date.now();persist();renderFiles();renderOutline();stats();}
 function stats(){$('#stats').textContent=`${current().content.replace(/\s/g,'').length.toLocaleString()} 字符 · ${current().content.split('\n').length} 行`;}
-function renderFiles(){const q=$('.search').value.toLowerCase();$('#files').replaceChildren();$('#doc-count').textContent=docs.length;for(const d of docs.filter(d=>d.name.toLowerCase().includes(q)||d.content.toLowerCase().includes(q))){const b=document.createElement('button');b.className='file '+(d.id===active?'active':'');b.setAttribute('aria-current',String(d.id===active));b.title=d.name;const name=document.createElement('strong');name.textContent=d.name.replace(/\.md$/,'');const sub=document.createElement('small');sub.textContent=d.content.replace(/[#*`>\n]/g,' ').slice(0,40)||'空白文档';b.append(name,sub);b.onclick=()=>switchDoc(d.id);$('#files').append(b);}if(!$('#files').children.length){const empty=document.createElement('p');empty.className='empty-state';empty.textContent='没有匹配的文档，试试其他关键词';$('#files').append(empty);} }
+function renderFiles(){const query=$('.search').value;$('#doc-count').textContent=docs.length;if(query)$('#documents-section').open=true;tree.render(docs,active,query);}
 function renderOutline(){$('#outline').replaceChildren();outline(current().content).forEach((h,i)=>{const b=document.createElement('button');b.textContent=h.text;b.title=h.text;b.style.paddingLeft=(12+(h.level-1)*12)+'px';b.onclick=()=>{const root=mode==='read'?$('#reader'):$('#editor .vditor-ir');const headings=root?.querySelectorAll('h1,h2,h3,h4,h5,h6');if(headings?.[i])headings[i].scrollIntoView({behavior:'smooth',block:'start'});else notify('请切换到即时编辑或阅读模式定位标题');};$('#outline').append(b);});}
-function refresh(){ $('#title').value=current().name;renderFiles();renderOutline();stats(); }
+function refresh(){ $('#title').value=current().name;renderFiles();renderOutline();stats();if($('#recent-section').open)renderRecent(); }
 function capture(){if(ready&&mode!=='read')current().content=editor.getValue();}
-function switchDoc(id){capture();persist();active=id;persist();refresh();mount();}
+function switchDoc(id){capture();persist();active=id;current().lastOpened=Date.now();persist();refresh();mount();if($('#recent-section').open)renderRecent();}
 function mount(){const ticket=++generation;ready=false;editor?.destroy();editor=null;$('#editor').innerHTML='';$('#editor').hidden=mode==='read';$('#reader').hidden=mode!=='read';if(mode==='read'){renderReader();return;}editor=new Vditor('editor',{cdn:new URL('vendor/vditor',document.baseURI).href,lang:'zh_CN',mode,theme:dark?'dark':'classic',height:'100%',value:current().content,cache:{enable:false},toolbar:['headings','bold','italic','strike','|','list','ordered-list','check','quote','code','inline-code','link','table','|','undo','redo'],outline:{enable:false},preview:{markdown:{toc:false,linkBase:window.inkstone?imageBase(current().id):''},hljs:{enable:true,style:dark?'github-dark':'github'},math:{engine:'KaTeX'},theme:{current:dark?'dark':'light',path:new URL('vendor/vditor/dist/css/content-theme',document.baseURI).href}},input:value=>{if(ticket===generation)sync(value);},after:()=>{if(ticket===generation){ready=true;editor.setTheme(dark?'dark':'classic',dark?'dark':'light',dark?'github-dark':'github');}}});}
 async function html(){const doc=current();const body=DOMPurify.sanitize(await Vditor.md2html(doc.content,{cdn:new URL('vendor/vditor',document.baseURI).href}),{FORBID_TAGS:['style','iframe'],FORBID_ATTR:['style']});const highlighted=await highlightHTML(body);return window.inkstone?embedLocalImages(highlighted,doc.id):highlighted;}
 async function renderReader(){const ticket=generation;$('#reader').textContent='正在加载文档…';try{const body=await html();if(ticket===generation)$('#reader').innerHTML=body;}catch(e){if(ticket===generation){$('#reader').textContent='文档加载失败，请重新切换阅读模式。';notify(e.message);}}}
@@ -32,15 +53,15 @@ async function save(saveAs=false){
   capture();persist();const doc=current(), savedContent=doc.content;
   try{
     if(window.inkstone){const result=await window.inkstone.save({id:doc.id,name:doc.name,content:savedContent,saveAs});
-      if(!result)return false;doc.name=result.name;doc.savedContent=savedContent;if(current().id===doc.id&&result.pathChanged)mount();
+      if(!result)return false;doc.name=result.name;doc.path=result.path;doc.savedContent=savedContent;if(current().id===doc.id&&result.pathChanged)mount();
     }else{download(doc.name,savedContent,'text/markdown;charset=utf-8');doc.savedContent=savedContent;}
-    refresh();persist();notify(window.inkstone?'文件已保存':'Markdown 已下载');return true;
+    refresh();persist();if($('#recent-section').open)renderRecent();notify(window.inkstone?'文件已保存':'Markdown 已下载');return true;
   }catch(e){notify('保存失败：'+e.message);return false;}
 }
 async function acceptFile(file){
   if(file.existingId&&docs.some(d=>d.id===file.existingId)){switchDoc(file.existingId);notify('已切换到工作空间中的文档，保留当前草稿');return;}
-  add(file.name,file.content);const doc=current();doc.savedContent=file.content;
-  await window.inkstone.bind({id:doc.id,token:file.token});persist();if(current().id===doc.id)mount();
+  add(file.name,file.content);const doc=current();doc.savedContent=file.content;doc.path=file.path;doc.lastOpened=Date.now();
+  await window.inkstone.bind({id:doc.id,token:file.token});persist();renderFiles();if($('#recent-section').open)renderRecent();if(current().id===doc.id)mount();
 }
 async function closeDoc(){
   capture();const doc=current();
@@ -91,15 +112,8 @@ if(window.inkstone){
     const commands={recent:()=>showRecent(),new:()=>add(),open,save:()=>save(),'save-as':()=>save(true),close:()=>closeDoc().catch(e=>notify(e.message)),find:toggleFind,focus:()=>$('#focus').click(),sidebar:()=>$('#sidebar-toggle').click(),print:()=>{$('#export').value='pdf';$('#export').dispatchEvent(new Event('change'));}};
     commands[action]?.();
   });
+  window.inkstone.locations().then(paths=>{for(const doc of docs)if(paths[doc.id])doc.path=paths[doc.id];persist();renderFiles();}).catch(e=>notify(e.message));
   window.inkstone.ready().catch(e=>notify(e.message));
 }
 
-async function showRecent(){
-  try{
-    const paths=await window.inkstone.recent();
-    if(!paths.length){notify('暂无最近文件');return;}
-    const dialog=document.createElement('dialog');const title=document.createElement('h3');title.textContent='最近打开';dialog.append(title);
-    paths.forEach((path,index)=>{const button=document.createElement('button');button.textContent=path;button.style.display='block';button.onclick=async()=>{dialog.close();try{await acceptFile(await window.inkstone.openRecent(index));}catch(e){notify(e.message);}};dialog.append(button);});
-    const close=document.createElement('button');close.textContent='取消';close.onclick=()=>dialog.close();dialog.append(close);dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();
-  }catch(e){notify(e.message);}
-}
+function showRecent(){document.body.classList.remove('hide-sidebar','focus');$('#focus').textContent='专注模式';$('#recent-section').open=true;renderRecent();$('#recent-section').scrollIntoView({block:'nearest'});}

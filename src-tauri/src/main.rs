@@ -18,7 +18,7 @@ fn make_file(app: &tauri::AppHandle, file: PathBuf) -> Result<serde_json::Value,
     if pending.len()>=32 { pending.clear(); }
     pending.insert(token.clone(),Binding{file:file.clone(),hash:files::digest(&content)});
     remember(&mut settings,&file); persist(&s,&settings)?;
-    Ok(serde_json::json!({"name":file.file_name().unwrap_or_default().to_string_lossy(),"content":content,"token":token,"existingId":existing}))
+    Ok(serde_json::json!({"name":file.file_name().unwrap_or_default().to_string_lossy(),"path":file.to_string_lossy(),"content":content,"token":token,"existingId":existing}))
 }
 fn receive(app: &tauri::AppHandle, file: PathBuf) {
     let s=app.state::<State>();
@@ -60,7 +60,7 @@ fn receive(app: &tauri::AppHandle, file: PathBuf) {
     } else {binding.as_ref().unwrap().file.clone()};
     let path_changed=binding.as_ref().map(|b|b.file!=path).unwrap_or(true);
     files::atomic_write(&path,&content)?; let mut settings=s.settings.lock().unwrap(); settings.bindings.insert(id,Binding{file:path.clone(),hash:files::digest(&content)}); remember(&mut settings,&path);persist(&s,&settings)?;
-    Ok(Some(serde_json::json!({"name":path.file_name().unwrap_or_default().to_string_lossy(),"pathChanged":path_changed})))
+    Ok(Some(serde_json::json!({"name":path.file_name().unwrap_or_default().to_string_lossy(),"path":path.to_string_lossy(),"pathChanged":path_changed})))
 }
 #[tauri::command] async fn export_html(app:tauri::AppHandle,name:String,content:String)->Result<bool,String> {
     if content.len()>50*1024*1024 {return Err("导出内容过大".into());}
@@ -68,6 +68,7 @@ fn receive(app: &tauri::AppHandle, file: PathBuf) {
     if let Some(p)=app.dialog().file().add_filter("HTML",&["html"]).set_file_name(name).blocking_save_file(){files::atomic_write(&p.into_path().map_err(|e|e.to_string())?,&content)?;Ok(true)}else{Ok(false)}
 }
 #[tauri::command] fn print_document(window:tauri::WebviewWindow)->Result<(),String>{window.print().map_err(|e|e.to_string())}
+#[tauri::command] fn document_locations(app:tauri::AppHandle)->HashMap<String,String>{app.state::<State>().settings.lock().unwrap().bindings.iter().map(|(id,b)|(id.clone(),b.file.to_string_lossy().to_string())).collect()}
 #[tauri::command] fn recent_documents(app:tauri::AppHandle)->Vec<String>{app.state::<State>().settings.lock().unwrap().recent.iter().map(|p|p.to_string_lossy().to_string()).collect()}
 #[tauri::command] fn open_recent(app:tauri::AppHandle,index:usize)->Result<serde_json::Value,String>{let path=app.state::<State>().settings.lock().unwrap().recent.get(index).cloned().ok_or("记录不存在")?;make_file(&app,path)}
 fn main() {
@@ -109,7 +110,7 @@ fn main() {
         else if ["new","open","recent","save","save-as","close","print","find","sidebar","focus"].contains(&event.id().as_ref()) {if let Some(w)=app.get_webview_window("main"){let _=w.show();let _=w.set_focus();}let _=app.emit("app-command",event.id().as_ref());}
     })
     .on_window_event(|w,event|{if let tauri::WindowEvent::CloseRequested{api,..}=event {api.prevent_close();let _=w.hide();}})
-    .invoke_handler(tauri::generate_handler![ready,open_document,bind_document,close_document,confirm_close,save_document,export_html,print_document,recent_documents,open_recent])
+    .invoke_handler(tauri::generate_handler![ready,open_document,bind_document,close_document,confirm_close,save_document,export_html,print_document,document_locations,recent_documents,open_recent])
     .build(tauri::generate_context!()).expect("启动失败")
     .run(|app,event|match event {
         tauri::RunEvent::Opened{urls}=>{for url in urls{if let Ok(p)=url.to_file_path(){receive(app,p);}}},
