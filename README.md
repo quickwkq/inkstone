@@ -1,6 +1,6 @@
 # 墨页 Inkstone
 
-本地优先的 macOS Markdown 阅读编辑器。源码私有，[安装包与使用指南](https://github.com/quickwkq/inkstone-releases)公开。
+本地优先的开源 macOS Markdown 阅读编辑器，采用 [MIT 许可证](LICENSE)。[下载最新安装包](https://github.com/quickwkq/inkstone/releases)，[历史版本](https://github.com/quickwkq/inkstone-releases/releases)。
 
 ## 开发
 
@@ -16,6 +16,8 @@ npm run checksums
 ```
 
 ## 功能
+
+0.3.3：纯白与深色主题，支持跟随系统；代码块语法高亮及 HTML 导出；顶部文件名自适应宽度，保存状态位于右下角，外观使用图标与文字。每个正式发布的版本均有对应的 `v<版本号>` 源码 tag。
 
 即时编辑、源码和阅读模式；大纲、搜索、明暗主题和专注模式；本地草稿恢复；系统打开/保存/另存为对话框；最近文件；Finder 文件关联；HTML 导出和系统打印/PDF。原子保存、符号链接保留和外部修改检测防止意外覆盖。
 

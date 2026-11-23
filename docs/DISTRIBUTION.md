@@ -1,6 +1,14 @@
 # macOS 分发
 
-源码仓库私有：quickwkq/inkstone。安装包公开：quickwkq/inkstone-releases。仅发布二进制及说明，不镜像源码仓库。
+源码与新版安装包公开在 quickwkq/inkstone，采用 MIT 许可证。quickwkq/inkstone-releases 保留 0.3.2 及更早版本的下载。
+
+## 版本与 tag
+
+每次发版必须先提交全部改动，确认工作区干净，并执行 `npm run check:version`。package.json、package-lock.json、Cargo.toml、Cargo.lock 和 tauri.conf.json 的版本必须一致。
+
+从最终提交构建并验收两个架构的安装包后，在该提交创建 `v<version>` tag（例如 `v0.3.3`），将 Release 绑定到同一 tag，并附上 DMG、ZIP 和 SHA256SUMS.txt。发布后不可移动 tag 或用同版本号替换安装包；修复必须增加版本号。首次开源版本为 0.3.3。
+
+可用 `git tag -a v<version> <commit> -m "Inkstone <version>"` 创建 tag，然后 `git push origin v<version>`；GitHub Release 页面创建 tag 时也必须选择最终提交。CI 会校验 tag 与包版本相同，但不会自动发布安装包。
 
 ## 构建
 
@@ -16,7 +24,7 @@ npm run checksums
 
 Tauri 通过系统 WKWebView 显示界面，不捆绑 Chromium 或 Node.js。产物为 release/Inkstone-<version>-mac-arm64.dmg、x64.dmg 及 ZIP。DMG 包含应用和 Applications 快捷方式。
 
-CI 分别构建两个架构，构建产物保留 14 天，不自动发布。上传公开 Release 前验证文件操作、安装包和校验和。合并矩阵任务的 SHA256SUMS.txt。不得上传应用用户数据、调试日志或私有源码归档。
+CI 分别构建两个架构，构建产物保留 14 天，不自动发布。上传公开 Release 前验证文件操作、安装包和校验和。合并矩阵任务的 SHA256SUMS.txt。不得上传应用用户数据、凭据或调试日志。
 
 ## 未签名测试版
 
